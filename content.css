@@ -1,0 +1,62 @@
+/* Halloween theme for Google pages.
+   Best-effort selectors on purpose: Google changes its DOM often
+   (redesigns, A/B tests, regional variants), so this theme only changes
+   broad colours. If a rule stops matching, the page still works and the
+   rest of the theme still applies. No animations. */
+
+html,
+body {
+  background-color: #0b0a09 !important;
+  color: #f5e9d3 !important;
+}
+
+a,
+a:visited {
+  color: #ff8c42 !important;
+}
+
+a:hover {
+  color: #ffb066 !important;
+}
+
+/* Search box and other text inputs. */
+input[type="text"],
+input[type="search"],
+textarea {
+  background-color: #1a120b !important;
+  color: #f5e9d3 !important;
+  border-color: #c93a2b !important;
+}
+
+/* Buttons on Google pages. */
+input[type="submit"],
+input[type="button"],
+button {
+  background-color: #2a1a10 !important;
+  color: #f5e9d3 !important;
+  border-color: #c93a2b !important;
+}
+
+/* Result text blocks keep a readable dark background instead of white. */
+div {
+  border-color: #3a2417 !important;
+}
+
+/* The one static corner decoration injected by content.js. */
+#halloween-costume-decoration {
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 2147483647 !important;
+  font-size: 44px !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #halloween-costume-decoration {
+    /* Already static; this rule is here so the intent stays explicit. */
+    animation: none !important;
+  }
+}
