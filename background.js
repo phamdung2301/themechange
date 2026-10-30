@@ -1,51 +1,45 @@
-// Background service worker for "Halloween Costume for Google".
+// Background service worker for "Custom Themes for Any Site".
 // It holds no UI state in memory: everything lives in chrome.storage.local,
 // because a Manifest V3 service worker can be stopped at any time.
 
-const DEFAULTS = {
-  enabled: true,
-  autoOff: true,
-  // Season end date (local date, YYYY-MM-DD). After this date the costume
-  // simply stops applying. It never uninstalls itself, and the user can
-  // pick a later date in the popup to bring it back.
-  seasonEnd: "2026-11-02",
-  disabledSites: []
-};
-
-chrome.runtime.onInstalled.addListener(async (details) => {
-  const stored = await chrome.storage.local.get(DEFAULTS);
-  // Fill in any missing key (for example after an update) without
-  // overwriting settings the user already chose.
-  const merged = { ...DEFAULTS, ...stored };
-  if (details.reason === "install") {
-    await chrome.storage.local.set(merged);
-  } else {
-    await chrome.storage.local.set(merged);
-  }
-
-  // Re-check the season once an hour so open Google tabs pick up the
-  // auto-off without needing a reload. The check itself is date-based
-  // (see content.js); the alarm only wakes the worker to re-evaluate.
-  chrome.alarms.create("halloween-season-check", { periodInMinutes: 60 });
+chrome.runtime.onInstalled.addListener(async () => {
+  // themes.js is not loaded in the worker, so defaults are repeated
+  // here in one place. Popup / new tab / content read the shared
+  // defaults from themes.js; this list only fills missing keys.
+  const defaults = {
+    enabled: true,
+    themeId: "halloween",
+    customBg: "#111827",
+    customText: "#f3f4f6",
+    customLink: "#60a5fa",
+    customAccent: "#6366f1",
+    customInputBg: "#1f2937",
+    customDecoration: "⭐",
+    autoOff: true,
+    seasonEnd: "2026-11-02",
+    disabledSites: []
+  };
+  const stored = await chrome.storage.local.get(defaults);
+  // Merge: old v1 settings (enabled, autoOff, seasonEnd, disabledSites)
+  // survive an update; new theme keys are filled in, never overwritten
+  // with a blank value.
+  await chrome.storage.local.set({ ...defaults, ...stored });
+  chrome.alarms.create("theme-season-check", { periodInMinutes: 60 });
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name !== "halloween-season-check") return;
+  if (alarm.name !== "theme-season-check") return;
   try {
-    const tabs = await chrome.tabs.query({
-      url: ["*://*.google.com/*", "*://google.com/*"]
-    });
+    const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
     for (const tab of tabs) {
       if (typeof tab.id !== "number") continue;
       try {
-        await chrome.tabs.sendMessage(tab.id, { type: "halloween-reevaluate" });
+        await chrome.tabs.sendMessage(tab.id, { type: "theme-reevaluate" });
       } catch (e) {
-        // Tab has no content script running (for example it is still
-        // loading). That is fine: the content script applies on load.
+        // Tab has no content script running yet. It applies on load.
       }
     }
   } catch (e) {
-    // No tabs permission beyond activeTab/hosts; failing silently here
-    // must never break the popup or the theme itself.
+    // Failing here must never break the popup or the theme itself.
   }
 });

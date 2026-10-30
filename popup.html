@@ -2,41 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Halloween Costume for Google</title>
+  <title>Custom Themes for Any Site</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h1>🎃 Halloween Costume</h1>
+  <h1>🎨 My Theme</h1>
   <p id="status">Loading…</p>
 
   <label class="row">
     <input type="checkbox" id="enabled">
-    <span>Costume on</span>
+    <span>Theme on</span>
   </label>
+
+  <label class="row">
+    <span>Theme</span>
+    <select id="themeSelect">
+      <option value="halloween">Halloween 🎃</option>
+      <option value="midnight">Midnight 🌙</option>
+      <option value="ocean">Ocean 🌊</option>
+      <option value="forest">Forest 🌿</option>
+      <option value="rose">Rose 🌸</option>
+      <option value="sunset">Sunset 🌅</option>
+      <option value="custom">Custom…</option>
+    </select>
+  </label>
+
+  <div id="customSection">
+    <label class="row">
+      <span>Background</span>
+      <input type="color" id="customBg">
+    </label>
+    <label class="row">
+      <span>Text</span>
+      <input type="color" id="customText">
+    </label>
+    <label class="row">
+      <span>Links</span>
+      <input type="color" id="customLink">
+    </label>
+    <label class="row">
+      <span>Accent / borders</span>
+      <input type="color" id="customAccent">
+    </label>
+    <label class="row">
+      <span>Input background</span>
+      <input type="color" id="customInputBg">
+    </label>
+    <label class="row">
+      <span>Corner icon</span>
+      <input type="text" id="customDecoration" maxlength="4" placeholder="⭐">
+    </label>
+  </div>
 
   <label class="row">
     <input type="checkbox" id="disableSite">
     <span>Turn off on this site: <span id="siteName">–</span></span>
   </label>
 
-  <label class="row">
-    <input type="checkbox" id="autoOff">
-    <span>Auto-off after the season ends</span>
-  </label>
+  <div id="seasonSection">
+    <label class="row">
+      <input type="checkbox" id="autoOff">
+      <span>Auto-off after Halloween ends</span>
+    </label>
+    <label class="row">
+      <span>Season ends</span>
+      <input type="date" id="seasonEnd">
+    </label>
+  </div>
 
-  <label class="row">
-    <span>Season ends</span>
-    <input type="date" id="seasonEnd">
-  </label>
-
-  <button type="button" id="openNewTab">Open Halloween new tab</button>
+  <button type="button" id="openNewTab">Open themed new tab</button>
 
   <p class="note">
-    Browser-only. This extension themes Google pages and its own new tab
-    page. It does not change your computer's wallpaper or system theme.
-    It collects and sends nothing; settings stay on this computer.
+    This themes any website you open, plus its own new tab page.
+    It is still browser-only: it does not change your computer's
+    wallpaper or system theme. It collects and sends nothing;
+    settings stay on this computer.
   </p>
 
+  <script src="themes.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

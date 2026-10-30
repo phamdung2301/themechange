@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Happy Halloween</title>
+  <title>My Theme</title>
   <link rel="stylesheet" href="newtab.css">
 </head>
 <body>
   <main>
-    <div class="pumpkin" aria-hidden="true">
+    <div class="decoration" id="pumpkinSvg" aria-hidden="true">
       <svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pumpkin">
         <rect x="44" y="4" width="8" height="16" rx="3" fill="#2e7d32"/>
         <ellipse cx="48" cy="56" rx="38" ry="30" fill="#ff8c42"/>
@@ -18,16 +18,18 @@
         <polygon points="38,66 48,60 58,66 52,72 44,72" fill="#0b0a09"/>
       </svg>
     </div>
-    <h1>Happy Halloween</h1>
+    <div class="decoration" id="themeIcon" aria-hidden="true" style="display: none; font-size: 96px; line-height: 1;"></div>
+    <h1 id="heading">Happy Halloween</h1>
     <p id="costumeStatus">Loading…</p>
     <form id="searchForm">
       <label for="searchInput">Search with your default search provider</label>
       <input type="search" id="searchInput" placeholder="Search…" autocomplete="off">
       <button type="submit">Search</button>
     </form>
-    <button type="button" id="toggleCostume">Turn costume off</button>
+    <button type="button" id="toggleCostume">Turn theme off</button>
     <p class="note" id="seasonNote"></p>
   </main>
+  <script src="themes.js"></script>
   <script src="newtab.js"></script>
 </body>
 </html>

@@ -1,96 +1,113 @@
-// Content script (ISOLATED world) for "Halloween Costume for Google".
+// Content script (ISOLATED world) for "Custom Themes for Any Site".
 // It only touches the page DOM. It never reads page JavaScript variables
 // and never sends anything anywhere: settings come from chrome.storage.local.
+// Theme colours come from themes.js (extension data, never page data).
 
-const STYLE_ID = "halloween-costume-style";
-const DECORATION_ID = "halloween-costume-decoration";
+const STYLE_ID = "my-theme-style";
+const DECORATION_ID = "my-theme-decoration";
 
-const DEFAULTS = {
-  enabled: true,
-  autoOff: true,
-  seasonEnd: "2026-11-02",
-  disabledSites: []
-};
-
-function todayLocal() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function themeCss(theme) {
+  // Broad colour rules on purpose, not a pixel-perfect redesign of any
+  // one site: sites change their DOM often, so a narrow selector set
+  // would break constantly. If one rule stops matching, the page
+  // still works and the rest of the theme still applies.
+  // No animations, ever.
+  return `
+html, body {
+  background-color: ${theme.bg} !important;
+  color: ${theme.text} !important;
+}
+a, a:visited {
+  color: ${theme.link} !important;
+}
+a:hover {
+  color: ${theme.link} !important;
+  opacity: 0.85 !important;
+}
+input[type="text"], input[type="search"], textarea, select {
+  background-color: ${theme.inputBg} !important;
+  color: ${theme.text} !important;
+  border-color: ${theme.accent} !important;
+}
+input[type="submit"], input[type="button"], button {
+  background-color: ${theme.inputBg} !important;
+  color: ${theme.text} !important;
+  border-color: ${theme.accent} !important;
+}
+div {
+  border-color: ${theme.accent} !important;
+}
+#${DECORATION_ID} {
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 16px !important;
+  z-index: 2147483647 !important;
+  font-size: 44px !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #${DECORATION_ID} { animation: none !important; }
+}
+`;
 }
 
-function isActive(settings, hostname) {
-  if (!settings.enabled) return false;
-  if (settings.autoOff && settings.seasonEnd && todayLocal() > settings.seasonEnd) {
-    return false;
-  }
-  if (Array.isArray(settings.disabledSites) && settings.disabledSites.includes(hostname)) {
-    return false;
-  }
-  return true;
-}
-
-function removeCostume() {
+function removeTheme() {
   const style = document.getElementById(STYLE_ID);
   if (style) style.remove();
   const decoration = document.getElementById(DECORATION_ID);
   if (decoration) decoration.remove();
 }
 
-let cachedCss = null;
-
-async function applyCostume() {
+async function applyTheme() {
+  const api = window.MY_THEMES;
+  if (!api) {
+    removeTheme();
+    return;
+  }
   let settings;
   try {
-    settings = await chrome.storage.local.get(DEFAULTS);
+    settings = await chrome.storage.local.get(api.DEFAULTS);
   } catch (e) {
-    removeCostume();
+    removeTheme();
     return;
   }
 
-  if (!isActive(settings, window.location.hostname)) {
-    removeCostume();
+  if (!api.isThemeActive(settings, window.location.hostname)) {
+    removeTheme();
     return;
   }
 
-  // Inject the stylesheet (fetched from the extension package, never remote).
-  if (!document.getElementById(STYLE_ID)) {
-    try {
-      if (cachedCss === null) {
-        const url = chrome.runtime.getURL("content.css");
-        const response = await fetch(url);
-        cachedCss = await response.text();
-      }
-      const style = document.createElement("style");
-      style.id = STYLE_ID;
-      style.textContent = cachedCss;
-      document.documentElement.appendChild(style);
-    } catch (e) {
-      // If the stylesheet cannot load, do not leave a half-applied theme.
-      removeCostume();
-      return;
-    }
-  }
+  const theme = api.resolveTheme(settings);
 
-  // One small static corner decoration. No animation, no mouse-following,
-  // no falling particles, and pointer-events are off in CSS so it can
-  // never block a click on the page.
-  if (!document.getElementById(DECORATION_ID)) {
+  let style = document.getElementById(STYLE_ID);
+  if (!style) {
+    style = document.createElement("style");
+    style.id = STYLE_ID;
+    document.documentElement.appendChild(style);
+  }
+  // Rebuild on every apply so a theme change in the popup recolours
+  // the page immediately, without a reload.
+  style.textContent = themeCss(theme);
+
+  if (!document.getElementById(DECORATION_ID) && document.body) {
     const decoration = document.createElement("div");
     decoration.id = DECORATION_ID;
     decoration.setAttribute("aria-hidden", "true");
-    decoration.textContent = "🎃";
+    decoration.textContent = theme.decoration;
     document.body.appendChild(decoration);
+  } else if (document.getElementById(DECORATION_ID)) {
+    document.getElementById(DECORATION_ID).textContent = theme.decoration;
   }
 }
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === "local") applyCostume();
+  if (areaName === "local") applyTheme();
 });
 
 chrome.runtime.onMessage.addListener((message) => {
-  if (message && message.type === "halloween-reevaluate") applyCostume();
+  if (message && message.type === "theme-reevaluate") applyTheme();
 });
 
-applyCostume();
+applyTheme();
